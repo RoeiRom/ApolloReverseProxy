@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useSubscription, useQuery } from '@apollo/client';
 
-import { NEW_USER } from './DAL/subscriptions';
 import User from './User';
 import { ALL_USERS } from './DAL/queries';
+import { NEW_USER } from './DAL/subscriptions';
 
 const App: React.FC = () => {
 
