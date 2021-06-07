@@ -1,26 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { useSubscription, useQuery } from '@apollo/client';
 
-function App() {
+import { NEW_USER } from './DAL/subscriptions';
+import User from './User';
+import { ALL_USERS } from './DAL/queries';
+
+const App: React.FC = () => {
+
+  const [users, setUsers] = useState<User[]>([]);
+
+  useQuery(ALL_USERS, {
+    fetchPolicy: 'cache-and-network',
+    onCompleted: (data) => setUsers(data.allUsers.nodes)
+  });
+
+  useSubscription(NEW_USER, {
+    onSubscriptionData: (options) => {
+      if (options.subscriptionData.data?.listen?.relatedNode) {
+        setUsers([...users, options.subscriptionData.data.listen.relatedNode])
+      }
+    }
+  })
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {
+        users.map(user => (
+          <div>
+            Id: {user.id} Name: {user.name}
+          </div>
+        ))
+      }
     </div>
-  );
+  )
 }
 
 export default App;
