@@ -1,38 +1,32 @@
-import React, { useState } from 'react';
-import { useSubscription, useQuery } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
+import io, { Socket } from 'socket.io-client';
 
-import { NEW_USER } from './DAL/subscriptions';
-import User from './User';
-import { ALL_USERS } from './DAL/queries';
+const socket = io(`ws://${window.location.host}`).connect();
 
 const App: React.FC = () => {
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [lastMessage, setLastMessage] = useState<string>('');
+  const [messageToSend, setMessageToSend] = useState<string>('');
 
-  useQuery(ALL_USERS, {
-    fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => setUsers(data.allUsers.nodes)
-  });
-
-  useSubscription(NEW_USER, {
-    onSubscriptionData: (options) => {
-      if (options.subscriptionData.data?.listen?.relatedNode) {
-        setUsers([...users, options.subscriptionData.data.listen.relatedNode])
-      }
-    }
-  })
+  useEffect(() => {
+    socket.on('message', data => {
+      setLastMessage(data);
+    });
+  }, [socket])
 
   return (
     <div>
-      {
-        users.map(user => (
-          <div>
-            Id: {user.id} Name: {user.name}
-          </div>
-        ))
-      }
+      <div>
+        <input type='text' value={messageToSend} onChange={(event) => setMessageToSend(event.target.value)} />
+        <button onClick={() => console.log('in click') as any|| socket.emit('send', messageToSend)}>
+          Send Message
+        </button>
+      </div>
+      <div>
+        Last Message: {lastMessage}
+      </div>
     </div>
-  )
+  );
 }
 
 export default App;
